@@ -1,62 +1,52 @@
 #!/bin/bash
 
-# Function to create a new group
-create_group() {
-  echo -n "Enter the name of the group you wish to create: "
-  read group_name
-  sudo groupadd $group_name
-  echo "Group '$group_name' has been created."
-}
+# QRadar Workshop Manager
 
-# Function to create a new user and add to a group
+# Function to create a user
 create_user() {
-  echo -n "Enter the name of the new user: "
-  read user_name
-  echo -n "Enter the name of the group to which the user should be added: "
-  read group_name
-  sudo useradd -G $group_name $user_name
-  echo "User '$user_name' has been created and added to group '$group_name'."
+  username=$1
+  password=$2
+  useradd -G workshop $username
+  echo -e "$password\n$password" | passwd $username &> /dev/null
+  printf "| %-10s | %-15s |\n" $username $password
 }
 
-# Function to set a password for a user
-set_password() {
-  echo -n "Enter the name of the user for whom you want to set a password: "
-  read user_name
-  sudo passwd $user_name
-}
+# Create workshop group if it doesn't exist
+if ! getent group workshop > /dev/null; then
+  groupadd workshop
+  echo "Group 'workshop' created."
+fi
 
-# Function to verify user details
-verify_user() {
-  echo -n "Enter the username you wish to verify: "
-  read user_name
-  id $user_name
-}
+# Menu
+echo "QRadar Workshop Manager"
+echo "1. Create Single User"
+echo "2. Create Multiple Users"
+read -p "Select an option (1/2): " option
 
-# Main menu loop
-while :
-do
-  clear
-  echo "----------------------------------"
-  echo "   User Management Menu"
-  echo "----------------------------------"
-  echo "[1] Create a new group"
-  echo "[2] Create a new user"
-  echo "[3] Set a password for a user"
-  echo "[4] Verify user details"
-  echo "[5] Quit/Exit"
-  echo "----------------------------------"
-  echo -n "Please enter your choice [1-5]: "
-  read choice
-
-  case $choice in
-    1) create_group ;;
-    2) create_user ;;
-    3) set_password ;;
-    4) verify_user ;;
-    5) exit 0 ;;
-    *) echo "Invalid choice, please enter a number between 1 and 5."
-  esac
-
-  echo -n "Press [Enter] key to continue..."
-  read _
-done
+case $option in
+  1)
+    read -p "Enter the username: " username
+    read -p "Enter the password: " password
+    # Print table header
+    printf "| %-10s | %-15s |\n" "Username" "Password"
+    printf "|%11s|%16s|\n" "-----------" "----------------"
+    create_user $username $password
+    ;;
+  2)
+    read -p "Enter the number of users to create: " num_users
+    read -p "Warning: This will create $num_users users with the password 'Workshop@123'. Do you want to continue? (y/n): " confirm
+    if [ "$confirm" == "y" ]; then
+      # Print table header
+      printf "| %-10s | %-15s |\n" "Username" "Password"
+      printf "|%11s|%16s|\n" "-----------" "----------------"
+      for i in $(seq 1 $num_users); do
+        create_user "user$i" "Workshop@123"
+      done
+    else
+      echo "User creation cancelled."
+    fi
+    ;;
+  *)
+    echo "Invalid option. Exiting."
+    ;;
+esac
