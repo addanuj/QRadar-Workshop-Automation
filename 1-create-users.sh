@@ -48,7 +48,7 @@ echo "QRadar Workshop Manager"
 echo "1. Create Single User"
 echo "2. Create Multiple Users"
 echo "3. Delete User"
-echo "4. Reset Password"
+echo "4. Set Default Password for a user"
 read -p "Select an option (1/2/3/4): " option
 
 case $option in
@@ -78,7 +78,7 @@ case $option in
     delete_user $username
     ;;
   4)
-    read -p "Enter the username for which to reset the password: " username
+    read -p "Enter the username for which to Set Default Password for a user: " username
     reset_password $username
     ;;
   *)
